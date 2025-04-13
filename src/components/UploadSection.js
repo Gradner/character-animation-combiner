@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import UploadButton from "./UploadButton";
 import { Context as ModalContext } from "../context/ModelContext";
 import { TextureLoader } from "three";
-import { TGALoader } from "three/examples/jsm/loaders/TGALoader";
 
 const UploadSection = ({ onMainModelUpload, onAnimationUpload, onAnimationFolderUpload }) => {
   const {
@@ -18,25 +17,16 @@ const UploadSection = ({ onMainModelUpload, onAnimationUpload, onAnimationFolder
     }
 
     const file = event.target.files[0];
-    const fileExt = file.name.split('.').pop().toLowerCase();
     const fileUrl = URL.createObjectURL(file);
     
     console.log('Loading texture:', {
       name: file.name,
-      type: fileExt,
       size: file.size,
       url: fileUrl
     });
     
-    let loader;
-    if (fileExt === 'tga') {
-      console.log('Using TGALoader');
-      loader = new TGALoader();
-    } else {
-      console.log('Using TextureLoader');
-      loader = new TextureLoader();
-      loader.setCrossOrigin("anonymous");
-    }
+    const loader = new TextureLoader();
+    loader.setCrossOrigin("anonymous");
     
     try {
       loader.load(
@@ -89,10 +79,10 @@ const UploadSection = ({ onMainModelUpload, onAnimationUpload, onAnimationFolder
       </li>
       <li className="collection-header grey darken-3 white-text">
         <h5>Upload Textures</h5>
-        <p>(.jpg / .png / .tga)</p>
+        <p>(.jpg / .png)</p>
         <UploadButton
           onUpload={onTextureUpload}
-          accept=".jpg,.jpeg,.png,.tga"
+          accept=".jpg,.jpeg,.png"
         />
       </li>
     </ul>
