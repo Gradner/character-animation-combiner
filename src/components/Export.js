@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
-import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter";
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { Context as ModalContext } from "../context/ModelContext";
+import * as THREE from "three";
 
 const Export = () => {
   const {
@@ -27,20 +28,31 @@ const Export = () => {
   };
 
   const exportGLB = () => {
-    toggleLoading();
     try {
+      toggleLoading();
       var exporter = new GLTFExporter();
-
       // Parse the input and generate the glTF output
       exporter.parse(
         mainModel,
+        function(error){
+          toggleLoading();
+          console.error('Export error:', error);
+          alert(
+            "Error: Try deleting the texture, if that does not help, Open an issue on the Github Repo"
+          );
+        },
         function (result) {
           saveArrayBuffer(result, `cac-${new Date().getTime()}.glb`);
         },
-        { trs: true, binary: true, animations: animations }
+        { 
+          trs: true,
+          binary: true, 
+          animations: animations
+        }
       );
     } catch (error) {
       toggleLoading();
+      console.error('Export error:', error);
       alert(
         "Error: Try deleting the texture, if that does not help, Open an issue on the Github Repo"
       );
@@ -51,7 +63,6 @@ const Export = () => {
     try {
       toggleLoading();
       var exporter = new GLTFExporter();
-
       // Parse the input and generate the glTF output
       exporter.parse(
         mainModel,
@@ -59,10 +70,22 @@ const Export = () => {
           var output = JSON.stringify(result, null, 2);
           saveString(output, `cac-${new Date().getTime()}.gltf`);
         },
-        { trs: true, binary: false, animations: animations }
+        function (error) {
+          toggleLoading();
+          console.error('Export error:', error);
+          alert(
+            "Error: Try deleting the texture, if that does not help, Open an issue on the Github Repo"
+          );
+        },
+        { 
+          trs: true,
+          binary: false, 
+          animations: animations
+        }
       );
     } catch (error) {
       toggleLoading();
+      console.error('Export error:', error);
       alert(
         "Error: Try deleting the texture, if that does not help, Open an issue on the Github Repo"
       );

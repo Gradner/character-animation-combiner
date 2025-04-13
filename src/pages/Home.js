@@ -3,7 +3,6 @@ import Layout from "../components/Layout";
 import UploadSection from "../components/UploadSection";
 import ModelViewer from "../components/ModelViewer";
 import AnimationList from "../components/AnimationList";
-import ChangeTexture from "../components/ChangeTexture";
 import loadModel from "../helpers/loadModel";
 import { Context as ModalContext } from "../context/ModelContext";
 import Export from "../components/Export";
@@ -23,7 +22,7 @@ const Home = () => {
     if (event.target.files[0]) {
       const file = event.target.files[0];
       let fileUrl = URL.createObjectURL(file);
-      setFileExt(file.name.split(".").pop());
+      setFileExt(file.name.split(".").pop().toLowerCase());
 
       setModel(fileUrl);
     }
@@ -33,7 +32,7 @@ const Home = () => {
     if (event.target.files.length) {
       Array.from(event.target.files).forEach((element) => {
         let fileUrl = URL.createObjectURL(element);
-        let fileExt = element.name.split(".").pop();
+        let fileExt = element.name.split(".").pop().toLowerCase();
         loadModel(fileUrl, fileExt, (object) => {
           let fileName = element.name.split(".")[0].replace(/\s/g, "");
           fileName = fileName.charAt(0).toUpperCase() + fileName.slice(1);
@@ -54,6 +53,49 @@ const Home = () => {
     }
   };
 
+  const onAnimationFolderUpload = (event) => {
+    if (event.target.files.length) {
+      const files = Array.from(event.target.files);
+      const fbxFiles = files.filter(file => 
+        file.name.toLowerCase().endsWith('.fbx') || 
+        file.name.toLowerCase().endsWith('.FBX')
+      );
+
+      if (fbxFiles.length === 0) {
+        console.warn('No FBX files found in the selected folder');
+        return;
+      }
+
+      fbxFiles.forEach((file) => {
+        let fileUrl = URL.createObjectURL(file);
+        let fileExt = file.name.split(".").pop().toLowerCase();
+        
+        // Get the relative path from the selected folder
+        const path = file.webkitRelativePath || file.relativePath;
+        const pathParts = path.split('/');
+        
+        // Remove the filename and root folder
+        pathParts.pop(); // Remove filename
+        pathParts.shift(); // Remove root folder
+        
+        // Only use subfolder structure if there are subfolders
+        const folderPath = pathParts.length > 0 ? pathParts.join('_') : null;
+        
+        loadModel(fileUrl, fileExt, (object) => {
+          let fileName = file.name.split(".")[0].replace(/\s/g, "");
+          fileName = fileName.charAt(0).toUpperCase() + fileName.slice(1);
+          
+          // Only include folder path if there are subfolders
+          const animationName = folderPath ? `${folderPath}_${fileName}` : fileName;
+          
+          // Since each file contains only one animation, we can just set its name directly
+          object.animations[0].name = animationName;
+          addAnimations(object.animations);
+        });
+      });
+    }
+  };
+
   return (
     <Layout>
       <div className="row" style={{ height: "91vh" }}>
@@ -61,9 +103,9 @@ const Home = () => {
           <UploadSection
             onMainModelUpload={onMainModelUpload}
             onAnimationUpload={onAnimationUpload}
+            onAnimationFolderUpload={onAnimationFolderUpload}
           />
           <Export />
-          <ChangeTexture />
           <Info />
         </div>
         <div className="col m6">

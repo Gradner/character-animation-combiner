@@ -5,6 +5,7 @@ const initialState = {
   animations: [],
   mixer: null,
   loading: false,
+  texture: null,
 };
 
 const modelReducer = (state, action) => {
@@ -33,6 +34,8 @@ const modelReducer = (state, action) => {
       };
     case "toogle_loading":
       return { ...state, loading: !state.loading };
+    case "set_texture":
+      return { ...state, texture: action.payload };
     default:
       return state;
   }
@@ -66,6 +69,10 @@ const toggleLoading = (dispatch) => () => {
   dispatch({ type: "toogle_loading" });
 };
 
+const setTexture = (dispatch) => (texture) => {
+  dispatch({ type: "set_texture", payload: texture });
+};
+
 export const { Provider, Context } = createDataContext(
   modelReducer,
   {
@@ -76,6 +83,7 @@ export const { Provider, Context } = createDataContext(
     addMixer,
     deleteAnimation,
     toggleLoading,
+    setTexture,
   },
   initialState
 );

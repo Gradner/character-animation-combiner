@@ -4,12 +4,14 @@ import { Box3, Vector3 } from "three";
 
 export default (path, type, callback) => {
   let loader = null;
-  if (type === "fbx") {
+  if (type.toLowerCase() === "fbx") {
     loader = new FBXLoader();
   } else loader = new GLTFLoader();
 
   loader.load(path, (object) => {
-    if (type === "fbx") {
+    console.log('Model loaded:', object);
+    
+    if (type.toLowerCase() === "fbx") {
       object.traverse(function (child) {
         if (child.isMesh) {
           child.castShadow = true;
@@ -26,7 +28,6 @@ export default (path, type, callback) => {
       box.getCenter(center);
       object.position.sub(center); // center the model
     }
-
     callback(object);
   });
 };

@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useContext } from "react";
 import * as THREE from "three";
-import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper";
 import setCamera from "../helpers/setCamera";
 import setControls from "../helpers/setControls";
 import setLights from "../helpers/setLights";
@@ -11,11 +10,37 @@ import { Context as ModalContext } from "../context/ModelContext";
 const ModelViewer = ({ model, fileExt }) => {
   const viewer = useRef(null);
   const {
+    state: { mainModel, texture },
     addMainModel,
     addAnimationFromMainModel,
     addMixer,
     toggleLoading,
   } = useContext(ModalContext);
+
+  // Effect to apply texture when it changes
+  useEffect(() => {
+    if (texture && mainModel) {
+      console.log('Applying texture to model:', texture);
+      mainModel.traverse((child) => {
+        if (child.isMesh && child.material) {
+          console.log('Found mesh with material:', child.name);
+          if (Array.isArray(child.material)) {
+            child.material.forEach((material, index) => {
+              if (material) {
+                console.log(`Applying texture to material ${index} of ${child.name}`);
+                material.map = texture;
+                material.needsUpdate = true;
+              }
+            });
+          } else if (child.material) {
+            console.log(`Applying texture to material of ${child.name}`);
+            child.material.map = texture;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [texture, mainModel]);
 
   useEffect(() => {
     if (!model) return;
@@ -35,7 +60,7 @@ const ModelViewer = ({ model, fileExt }) => {
 
     // ground
     var mesh = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(2000, 2000),
+      new THREE.PlaneGeometry(2000, 2000),
       new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
     );
     mesh.rotation.x = -Math.PI / 2;
@@ -50,7 +75,6 @@ const ModelViewer = ({ model, fileExt }) => {
     scene.add(grid);
 
     scene.fog = new THREE.Fog(0xa0a0a0, 200, 1000);
-    var roughnessMipmapper = new RoughnessMipmapper(renderer);
     toggleLoading();
     loadModel(model, fileExt, (object) => {
       toggleLoading();
@@ -74,12 +98,11 @@ const ModelViewer = ({ model, fileExt }) => {
         fileExt === "fbx" ? object : object.scene
       );
       addMixer(mixer);
-      roughnessMipmapper.dispose();
     });
 
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1;
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     var pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
